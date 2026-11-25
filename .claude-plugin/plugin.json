@@ -1,0 +1,28 @@
+{
+  "name": "stable",
+  "version": "1.0.0",
+  "description": "Stable plugin - agents, skills, commands, hooks, rules and MCP configs imported from ECC, plus caveman skills",
+  "author": {
+    "name": "Luis-Dokkaebi",
+    "url": "https://github.com/Luis-Dokkaebi"
+  },
+  "repository": "https://github.com/Luis-Dokkaebi/stable",
+  "license": "MIT",
+  "keywords": ["claude-code", "agents", "skills", "hooks", "commands", "workflow"],
+  "userConfig": {
+    "hooks_enabled": {
+      "type": "boolean",
+      "title": "Enable hooks",
+      "description": "Run local lifecycle, quality, and safety hook automation. Disable to keep skills, agents and commands without hooks.",
+      "default": true
+    },
+    "hook_profile": {
+      "type": "string",
+      "title": "Hook profile",
+      "description": "Choose minimal, standard, or strict. Invalid values safely fall back to standard.",
+      "default": "standard"
+    }
+  },
+  "skills": ["./skills/"],
+  "commands": ["./commands/"]
+}
