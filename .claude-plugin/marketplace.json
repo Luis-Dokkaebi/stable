@@ -1,0 +1,19 @@
+{
+  "name": "stable",
+  "owner": {
+    "name": "Luis-Dokkaebi"
+  },
+  "metadata": {
+    "description": "Stable agents, skills, commands and hooks"
+  },
+  "plugins": [
+    {
+      "name": "stable",
+      "source": "./",
+      "description": "Agents, skills, commands, hooks and rules imported from ECC, plus caveman skills",
+      "version": "1.0.0",
+      "license": "MIT",
+      "category": "workflow"
+    }
+  ]
+}
