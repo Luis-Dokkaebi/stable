@@ -747,7 +747,7 @@ function renderDocs() {
   $("#copy-all").onclick = () => copyText(JSON.stringify(exportExpediente(), null, 2), "Expediente copiado");
 }
 function exportExpediente() {
-  return { sistema: "Paymexbtc Core (demo simulada)", generado: new Date().toISOString(), cliente: ctx.in.rs, rfc: ctx.in.rfc, sello_merkle: ctx.d.seal || null,
+  return { sistema: "Paymexbtc Core", generado: new Date().toISOString(), cliente: ctx.in.rs, rfc: ctx.in.rfc, sello_merkle: ctx.d.seal || null,
     documentos: ctx.docs.map(d => ({ id: d.id, titulo: d.title, agente: d.owner, fase: d.phase, estado: d.status, sha256: d.hash, fecha: d.ts, contenido: d.content })) };
 }
 document.addEventListener("click", ev => { const b = ev.target.closest("[data-doc]"); if (b) openDoc(b.dataset.doc); });
