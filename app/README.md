@@ -15,3 +15,9 @@ open app/index.html        # o: python3 -m http.server -d app 8080
 - 8 agentes autoevolutivos (AG-08, 11, 13, 17, 19, 22, 26, 30) guardan memoria entre corridas en `localStorage`.
 
 Todo es simulado: TXID, SPEI, pedimentos y documentos no tienen validez legal. Tasas y umbrales son editables y deben confirmarse con el agente aduanal y el oficial de cumplimiento.
+
+## Despliegue
+
+Producción: https://paymexbtc-core.vercel.app
+
+El proyecto `paymexbtc-core` en Vercel está conectado a este repositorio. Cada push a la rama de producción (`claude/peaceful-euler-etfs5e`) redepliega solo. Los pushes a otras ramas generan deployments de preview.
