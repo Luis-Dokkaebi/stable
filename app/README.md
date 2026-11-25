@@ -20,4 +20,4 @@ Todo es simulado: TXID, SPEI, pedimentos y documentos no tienen validez legal. T
 
 Producción: https://paymexbtc-core.vercel.app
 
-El proyecto `paymexbtc-core` en Vercel está conectado a este repositorio. Cada push a la rama de producción (`claude/peaceful-euler-etfs5e`) redepliega solo. Los pushes a otras ramas generan deployments de preview.
+El proyecto `paymexbtc-core` en Vercel está conectado a este repositorio. Cada push a `main` redepliega producción solo. Los pushes a otras ramas generan deployments de preview.
