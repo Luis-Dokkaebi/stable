@@ -98,10 +98,25 @@ legend { font-family: var(--f-display); font-size: 12px; letter-spacing: 0.07em;
 .speed input { width: 80px; accent-color: var(--accent); }
 .toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; cursor: pointer; }
 .toggle input { accent-color: var(--accent); margin: 0; }
-.legend { position: absolute; left: 10px; bottom: 10px; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: var(--muted); max-width: calc(100% - 160px); background: color-mix(in srgb, var(--bg) 75%, transparent); padding: 6px 9px; border-radius: 6px; }
-.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
-.legend .auto i { background: transparent; border: 1.5px dashed var(--fg); }
-.zoom { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 4px; }
+.gtools .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; pointer-events: none !important; }
+.gtools .row > * { pointer-events: auto; }
+.etoggles { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--bg) 70%, transparent); padding: 4px 8px; border-radius: 6px; }
+.etoggles label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.etoggles input { accent-color: var(--warn); margin: 0; }
+.legend { position: absolute; left: 10px; bottom: 10px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; max-width: calc(100% - 250px); background: color-mix(in srgb, var(--bg) 75%, transparent); padding: 6px 9px; border-radius: 6px; }
+.legend span { white-space: nowrap; }
+.legend i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.legend small { font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); margin-left: 5px; }
+.legend .auto { color: var(--muted); }
+.legend .auto b { font-weight: 500; color: var(--fg); margin-right: 5px; }
+.zoom { position: absolute; right: 10px; bottom: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.zoom .btns { display: flex; gap: 4px; }
+.zoom .count { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.btn.icon { padding: 5px 7px; }
+.btn.icon svg { width: 15px; height: 15px; display: block; }
+.app.focus .left { display: none; }
+.app.focus .main { grid-template-columns: minmax(0, 1fr) 380px; }
+.app.focus header.top .sub { display: none; }
 .caption { position: absolute; left: 50%; top: var(--cap-top, 52px); transform: translateX(-50%); max-width: min(560px, calc(100% - 20px)); text-align: center; font-size: 13px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; pointer-events: none; }
 .caption b { font-family: var(--f-mono); font-weight: 500; color: var(--accent); margin-right: 6px; }
 .caption[data-s="block"] { border-color: var(--crit); }
@@ -182,6 +197,7 @@ td.num, th.num { text-align: right; }
   .main { grid-template-columns: 280px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 360px; }
   .right { grid-column: 1 / -1; }
   .phases { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .app.focus .main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 300px; }
 }
 @media (max-width: 760px) {
   html, body, .app { height: auto; }
@@ -192,6 +208,8 @@ td.num, th.num { text-align: right; }
   .stats { margin-left: 0; }
   .caption { top: auto; bottom: 46px; }
   .legend { display: none; }
+  .app.focus .main { grid-template-rows: none; }
+  .app.focus .graph { height: 80vh; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
@@ -217,8 +235,10 @@ td.num, th.num { text-align: right; }
         <form class="order" id="order" novalidate>
           <fieldset>
             <legend>Escenarios rápidos</legend>
+            <label class="toggle" for="f-vary"><input id="f-vary" type="checkbox" checked> Datos nuevos en cada corrida</label>
+            <p class="hint" id="vary-hint">Cada corrida genera otra empresa, mercancía, montos, red, wallet y eventos de control. Si editas un campo, se usan tus datos.</p>
             <div class="scen">
-              <button type="button" class="chip" data-scen="base">20 playeras · formal</button>
+              <button type="button" class="chip" data-scen="base">Base · formal</button>
               <button type="button" class="chip" data-scen="courier">Paquetería</button>
               <button type="button" class="chip" data-scen="solana">Wallet Solana</button>
               <button type="button" class="chip" data-scen="badwallet">Wallet inválida</button>
@@ -236,7 +256,7 @@ td.num, th.num { text-align: right; }
           </fieldset>
           <fieldset>
             <legend>Pedido a Hong Kong</legend>
-            <div class="field"><label for="f-prod">Mercancía</label><input id="f-prod" value="Playera cuello redondo, 100% algodón, tejido de punto"></div>
+            <div class="field"><label for="f-prod">Mercancía</label><input id="f-prod" list="prod-list" value="Playera cuello redondo, 100% algodón, tejido de punto"><datalist id="prod-list"></datalist></div>
             <div class="row2">
               <div class="field"><label for="f-qty">Piezas</label><input id="f-qty" type="number" min="1" step="1" value="20"></div>
               <div class="field"><label for="f-unit">Precio unitario USD</label><input id="f-unit" type="number" min="0.01" step="0.01" value="6.80"></div>
@@ -249,6 +269,7 @@ td.num, th.num { text-align: right; }
               <div class="field"><label for="f-coin">Stablecoin del proveedor</label><select id="f-coin"><option>USDT</option><option>USDC</option></select></div>
               <div class="field"><label for="f-net">Red</label><select id="f-net"><option value="auto">Auto (AG-30)</option><option value="polygon">Polygon</option><option value="ethereum">Ethereum</option><option value="arbitrum">Arbitrum</option><option value="solana">Solana</option></select></div>
             </div>
+            <div class="field"><label for="f-prov">Proveedor en Hong Kong</label><input id="f-prov" value="Kowloon Thread Co., Ltd."></div>
             <div class="field"><label for="f-wallet">Wallet del proveedor (proforma)</label><input id="f-wallet" class="mono" value="0x7a3F9c1B4e2D8a6f0C5b9E1d3A7c2F4b6D8e0A1c"></div>
             <div class="row2">
               <div class="field"><label for="f-cust">Wallet destino</label><select id="f-cust"><option value="custodial">Custodial (VASP HK)</option><option value="noncustodial">No custodial</option></select></div>
@@ -274,19 +295,33 @@ td.num, th.num { text-align: right; }
     <section class="panel graph" aria-label="Grafo de agentes">
       <canvas id="cv" aria-label="Grafo interactivo de los 33 agentes y sus conexiones" role="img"></canvas>
       <div class="gtools">
-        <button class="btn primary" id="b-play" type="button">Ejecutar flujo</button>
-        <button class="btn" id="b-step" type="button">Paso</button>
-        <button class="btn" id="b-reset" type="button">Reiniciar</button>
-        <label class="speed" for="f-speed">Velocidad <input id="f-speed" type="range" min="0.5" max="6" step="0.1" value="1.4"></label>
-        <label class="toggle" for="f-mesh"><input id="f-mesh" type="checkbox"> Malla 33×33</label>
-        <label class="toggle" for="f-labels"><input id="f-labels" type="checkbox" checked> Etiquetas</label>
+        <div class="row">
+          <button class="btn primary" id="b-play" type="button">Ejecutar flujo</button>
+          <button class="btn" id="b-step" type="button">Paso</button>
+          <button class="btn" id="b-reset" type="button">Reiniciar</button>
+          <label class="speed" for="f-speed">Velocidad <input id="f-speed" type="range" min="0.5" max="6" step="0.1" value="1.4"></label>
+          <label class="toggle" for="f-mesh"><input id="f-mesh" type="checkbox"> Malla 33×33</label>
+          <label class="toggle" for="f-labels"><input id="f-labels" type="checkbox" checked> Etiquetas</label>
+        </div>
+        <div class="row">
+          <div class="etoggles" role="group" aria-label="Tipos de vínculo visibles">
+            <label><input type="checkbox" data-ecat="jer" checked> Jerarquía</label>
+            <label><input type="checkbox" data-ecat="flow" checked> Flujo</label>
+            <label><input type="checkbox" data-ecat="vig" checked> Vigilancia</label>
+            <label><input type="checkbox" data-ecat="coord" checked> Coordinación</label>
+          </div>
+        </div>
       </div>
       <div class="caption" id="caption" hidden></div>
       <div class="legend" id="legend"></div>
       <div class="zoom">
-        <button class="btn small" id="z-in" type="button" aria-label="Acercar">+</button>
-        <button class="btn small" id="z-out" type="button" aria-label="Alejar">−</button>
-        <button class="btn small" id="z-fit" type="button">Ajustar</button>
+        <span class="count" id="g-count"></span>
+        <div class="btns">
+          <button class="btn small icon" id="z-in" type="button" aria-label="Acercar" title="Acercar"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14M5 7h4M7 5v4"/></svg></button>
+          <button class="btn small icon" id="z-out" type="button" aria-label="Alejar" title="Alejar"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14M5 7h4"/></svg></button>
+          <button class="btn small" id="z-fit" type="button">Ajustar</button>
+          <button class="btn small icon" id="z-full" type="button" aria-pressed="false" aria-label="Pantalla completa (tecla F)" title="Pantalla completa (tecla F)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path class="ex" d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/><path class="co" d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4" hidden/></svg></button>
+        </div>
       </div>
     </section>
 
@@ -327,13 +362,13 @@ const ROOT_CSS = getComputedStyle(document.documentElement);
 const token = name => ROOT_CSS.getPropertyValue(name).trim();
 const C = { accent: token("--accent"), fg: token("--fg"), muted: token("--muted"), bg: token("--bg"), warn: token("--warn"), crit: token("--crit"), edgeHi: token("--edge-hi") };
 const GROUPS = {
-  gov: { name: "Gobernanza y Cumplimiento", color: token("--g-gov") },
-  onb: { name: "Fase 1 · Onboarding y KYB", color: token("--g-onb") },
-  tes: { name: "Fase 2 · Tesorería y Liquidez", color: token("--g-tes") },
-  liq: { name: "Fase 3 · Liquidación y Auditoría", color: token("--g-liq") },
-  sen: { name: "Centinelas y Control", color: token("--g-sen") },
-  ia:  { name: "Agentes de flujo IA", color: token("--g-ia") },
-  act: { name: "Actores externos", color: token("--g-act") },
+  gov: { name: "Gobernanza y Cumplimiento", short: "Gobernanza", range: "01–04 · 33", color: token("--g-gov") },
+  onb: { name: "Fase 1 · Onboarding y KYB", short: "Alta / KYB", range: "05–08", color: token("--g-onb") },
+  tes: { name: "Fase 2 · Tesorería y Liquidez", short: "Tesorería", range: "09–14", color: token("--g-tes") },
+  liq: { name: "Fase 3 · Liquidación y Auditoría", short: "Liquidación", range: "15–20", color: token("--g-liq") },
+  sen: { name: "Centinelas y Control", short: "Centinelas", range: "21–32", color: token("--g-sen") },
+  ia:  { name: "Agentes de flujo IA", short: "Flujo IA", range: "IA1–IA3", color: token("--g-ia") },
+  act: { name: "Actores externos", short: "Externos", range: "", color: token("--g-act") },
 };
 
 // [id, grupo, nombre corto, nombre, autoevolutivo, orquestador, descripción]
@@ -373,7 +408,7 @@ const AGENT_ROWS = [
   ["AG-33","gov","Coordinador maestro","Coordinador Maestro de los 33 Agentes Paymexbtc",0,1,"Garantiza que la red opere con exactamente 33 agentes activos y trazabilidad unificada."],
 ];
 const FLOW_ROWS = [
-  ["CLIENTE","act","Cliente","Cliente · compra de 20 playeras",0,1,"Empresa mexicana que compra playeras a un proveedor de Hong Kong y paga con stablecoin."],
+  ["CLIENTE","act","Cliente","Cliente · empresa importadora",0,1,"Empresa mexicana que compra prendas a un proveedor de Hong Kong y paga con stablecoin."],
   ["IA1","ia","Salida MXN","Agente IA1 · Salida del MXN y conversión a stablecoin",0,1,"Integra el expediente KYC del exchange mexicano (Ley Fintech, LFPIORPI) y compra la stablecoin."],
   ["IA1.1","ia","Concilia KYC","Subagente IA1.1 · Concilia",0,0,"INE/pasaporte con biometría, CURP, CSF, comprobante de domicilio, estado de cuenta de origen y comprobante de compra."],
   ["IA2","ia","Envío a HK","Agente IA2 · Envío de stablecoin a Hong Kong",0,1,"Cumplimiento SFC/HKMA (Stablecoins Ordinance), AML y Travel Rule hasta la recepción del proveedor."],
@@ -384,8 +419,9 @@ const FLOW_ROWS = [
   ["EXCH","act","Exchange MX","Exchange regulado en México",0,0,"Plataforma regulada donde se convierte el MXN a stablecoin (simulada)."],
   ["PROV","act","Proveedor HK","Kowloon Thread Co., Ltd. · Hong Kong",0,0,"Proveedor ficticio de la demo que acepta USDT/USDC."],
 ];
+const TAGS = { CLIENTE: "CLI", "IA-PROV": "IA-P" }; // texto dentro del círculo
 const NODE_LIST = [...AGENT_ROWS, ...FLOW_ROWS].map(([id, group, short, name, auto, orch, desc]) =>
-  ({ id, group, short, name, auto: !!auto, orch: !!orch, desc, isAgent: id.startsWith("AG-") }));
+  ({ id, group, short, name, auto: !!auto, orch: !!orch, desc, isAgent: id.startsWith("AG-"), tag: TAGS[id] || id }));
 const AGENT_IDS = NODE_LIST.filter(n => n.isAgent).map(n => n.id);
 
 const STRUCT_EDGES = [
@@ -457,6 +493,92 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
+/* ============================================================
+   2b. Variación por corrida: catálogos de datos ficticios
+   ============================================================ */
+const CLIENTS = [
+  "Textiles Aurora S.A. de C.V.", "Confecciones del Bajío S.A. de C.V.", "Moda Norteña S. de R.L. de C.V.", "Uniformes Tláloc S.A. de C.V.",
+  "Boutique Jacaranda S.A. de C.V.", "Distribuidora Cenote S.A. de C.V.", "Comercializadora Huasteca S.A. de C.V.", "Prendas Sierra Madre S.A. de C.V.",
+  "Grupo Textil Pacífico S.A. de C.V.", "Ropa Urbana Querétaro S.A. de C.V.",
+];
+// [nombre, primer apellido, segundo apellido, sexo]
+const PEOPLE = [
+  ["María Fernanda", "López", "Ruiz", "M"], ["Jorge Iván", "Méndez", "Soto", "H"], ["Ana Sofía", "Hernández", "Vega", "M"], ["Luis Alberto", "García", "Torres", "H"],
+  ["Daniela", "Ramírez", "Ochoa", "M"], ["Carlos Eduardo", "Navarro", "Pineda", "H"], ["Valeria", "Castillo", "Mora", "M"], ["Ricardo", "Salinas", "Cruz", "H"],
+  ["Paola", "Gutiérrez", "Lara", "M"], ["Héctor Manuel", "Domínguez", "Ríos", "H"], ["Ximena", "Benítez", "Campos", "M"], ["Raúl", "Ortega", "Fuentes", "H"],
+];
+const STATES = ["DF", "JC", "NL", "PL", "GT", "QT", "YN", "MC", "BC", "SL"];
+const ADDRESSES = [
+  "Av. Insurgentes Sur 1234, Col. Del Valle, CDMX", "Av. Vallarta 3050, Col. Vallarta Poniente, Guadalajara, Jal.", "Av. Constitución 410, Col. Centro, Monterrey, N.L.",
+  "Blvd. Bernardo Quintana 220, Col. Arboledas, Querétaro, Qro.", "Calle 60 No. 455, Col. Centro, Mérida, Yuc.", "Av. Juárez 2915, Col. La Paz, Puebla, Pue.",
+  "Blvd. Adolfo López Mateos 1801, Col. Andrade, León, Gto.",
+];
+// Mercancía textil (capítulo 61 del SA). La subpartida es de 6 dígitos; la fracción TIGIE y el NICO se confirman con el agente aduanal.
+const PRODUCTS = [
+  { name: "Playera cuello redondo, 100% algodón, tejido de punto", noun: "playeras", model: "Crew neck tee", material: "100% algodón, tejido de punto", hs: "6109.10", kg: 0.18, unit: [4.2, 8.9] },
+  { name: "Playera tipo polo, algodón piqué", noun: "polos", model: "Piqué polo", material: "Algodón piqué, tejido de punto", hs: "6105.10", kg: 0.24, unit: [6.5, 12.5] },
+  { name: "Sudadera con capucha, algodón perchado", noun: "sudaderas", model: "Pullover hoodie", material: "80% algodón / 20% poliéster, perchado", hs: "6110.20", kg: 0.52, unit: [9.5, 19.0] },
+  { name: "Calcetas deportivas, algodón peinado (par)", noun: "pares de calcetas", model: "Crew sport sock", material: "Algodón peinado con elastano", hs: "6115.95", kg: 0.06, unit: [0.9, 2.4] },
+  { name: "Playera manga larga, algodón orgánico", noun: "playeras manga larga", model: "Long sleeve tee", material: "100% algodón orgánico, jersey", hs: "6109.10", kg: 0.23, unit: [5.8, 10.5] },
+];
+const PROVIDERS = [
+  ["Kowloon Thread Co., Ltd.", "Kowloon"], ["Harbour Knitwear Ltd.", "Kwun Tong"], ["Lucky Star Garment Trading Ltd.", "Tsuen Wan"],
+  ["Pearl Delta Apparel Co., Ltd.", "Sham Shui Po"], ["Victoria Peak Textiles Ltd.", "Kwai Chung"], ["Jade Loom Sourcing Ltd.", "Lai Chi Kok"],
+];
+const ORIGINS = ["Dongguan", "Guangzhou", "Shantou", "Foshan", "Ningbo", "Zhongshan"];
+const BANKS = [["002", "Banamex"], ["012", "BBVA México"], ["014", "Santander"], ["021", "HSBC"], ["072", "Banorte"]];
+const COURIERS = ["DHL", "FedEx", "UPS"];
+const COLORS = ["Blanco y negro", "Gris jaspe y azul marino", "Negro", "Blanco, arena y verde olivo", "Azul rey y blanco", "Vino y negro"];
+
+const deacc = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/Ñ/g, "X");
+function rfcPM(rs, date) {
+  const stop = new Set(["S.A.", "DE", "DEL", "C.V.", "R.L.", "S.", "LA", "LAS", "LOS", "Y", "EL"]);
+  const words = deacc(rs).split(/\s+/).filter(w => !stop.has(w));
+  let ini = words.slice(0, 3).map(w => w.replace(/[^A-Z]/g, "")[0]).join("");
+  if (ini.length < 3) ini = (words[0] || "XXX").replace(/[^A-Z]/g, "").slice(0, 3);
+  return (ini + "XXX").slice(0, 3) + date + randB58(3).toUpperCase().replace(/[^A-Z0-9]/g, "A");
+}
+function curpOf([nom, ap1, ap2, sx], date) {
+  const N = deacc(nom.split(" ")[0]), A1 = deacc(ap1), A2 = deacc(ap2);
+  const vow = A1.slice(1).match(/[AEIOU]/), cons = w => (w.slice(1).match(/[^AEIOU]/) || ["X"])[0];
+  return A1[0] + (vow ? vow[0] : "X") + A2[0] + N[0] + date + sx + pick(STATES) + cons(A1) + cons(A2) + cons(N) + (Math.random() < 0.5 ? "0" : "A") + Math.floor(Math.random() * 10);
+}
+function yymmdd(y0, y1) { const d = new Date(Date.UTC(Math.floor(rand(y0, y1)), Math.floor(rand(0, 12)), Math.floor(rand(1, 28)))); return d.toISOString().slice(2, 10).replace(/-/g, ""); }
+function randEvm() { return "0x" + [...randHex(40)].map(c => Math.random() < 0.5 ? c.toUpperCase() : c).join(""); }
+function productOf(name) { return PRODUCTS.find(p => p.name === name) || { name, noun: "piezas", model: name, material: "Según ficha técnica del proveedor", hs: "Por clasificar con el agente aduanal", kg: 0.25 }; }
+function sizeSplit(q) {
+  const sizes = ["S", "M", "L", "XL"], w = sizes.map(() => rand(0.6, 1.4)), tw = w.reduce((a, b) => a + b, 0);
+  const n = w.map(x => Math.floor(q * x / tw)); let left = q - n.reduce((a, b) => a + b, 0); for (let i = 0; left > 0; i = (i + 1) % 4, left--) n[i]++;
+  return sizes.map((s, i) => `${s} ${n[i]}`).join(" / ");
+}
+// Llena el formulario con una operación distinta. Los parámetros regulatorios no se tocan.
+function randomizeInputs() {
+  const set = (id, v) => { $("#" + id).value = v; };
+  const rs = pick(CLIENTS), rep = pick(PEOPLE), prod = pick(PRODUCTS);
+  const qty = Math.random() < 0.15 ? Math.round(rand(8, 14)) : Math.round(rand(16, 160) / (prod.unit[1] > 12 ? 2 : 1));
+  const sol = Math.random() < 0.25;
+  set("f-rs", rs); set("f-rfc", rfcPM(rs, yymmdd(2008, 2023))); set("f-rep", `${rep[0]} ${rep[1]} ${rep[2]}`); set("f-curp", curpOf(rep, yymmdd(1968, 1999)));
+  set("f-prod", prod.name); set("f-qty", qty); set("f-unit", rand(...prod.unit).toFixed(2));
+  set("f-freight", Math.round(rand(35, 70) + qty * prod.kg * rand(4, 7))); set("f-fx", rand(17.6, 19.6).toFixed(4));
+  set("f-coin", pick(["USDT", "USDC"])); set("f-prov", pick(PROVIDERS)[0]);
+  set("f-wallet", sol ? randB58(44) : randEvm());
+  set("f-net", sol ? pick(["auto", "auto", "solana"]) : pick(["auto", "auto", "auto", "polygon", "arbitrum", "ethereum"]));
+  set("f-cust", Math.random() < 0.7 ? "custodial" : "noncustodial");
+  set("f-mode", Math.random() < 0.75 ? "formal" : "courier");
+}
+// Detalles que no están en el formulario: cambian en cada corrida aunque el pedido sea el mismo.
+function runExtras(i) {
+  const others = PEOPLE.filter(p => `${p[0]} ${p[1]} ${p[2]}` !== i.rep); const u2 = pick(others);
+  const share = pick([51, 55, 60, 65, 70, 75]);
+  const prov = PROVIDERS.find(p => p[0] === i.prov) || [i.prov || "Proveedor HK", "Kowloon"];
+  return {
+    ubo2: `${u2[0]} ${u2[1]} ${u2[2]}`, share, addr: pick(ADDRESSES), bank: pick(BANKS), origin: pick(ORIGINS), courier: pick(COURIERS),
+    colors: pick(COLORS), sizes: sizeSplit(i.qty), product: productOf(i.prod), provDistrict: prov[1],
+    // eventos de control que aparecen solo en algunas corridas
+    ev: { homonym: Math.random() < 0.22, oldAddr: Math.random() < 0.2, piMismatch: Math.random() < 0.2, gasSpike: Math.random() < 0.3 ? pick(Object.keys(NETS)) : null },
+  };
+}
+
 
 /* ============================================================
    3. Memoria de agentes autoevolutivos
@@ -482,43 +604,74 @@ let Lprev = JSON.parse(JSON.stringify(L));
    4. Motor de grafo (simulación de fuerzas tipo Obsidian)
    ============================================================ */
 const cv = $("#cv"), g = cv.getContext("2d");
-const G = { nodes: [], map: {}, edges: [], ek: new Map(), mesh: [], meshAlpha: 0, cam: { x: 0, y: 0, k: 1 }, w: 0, h: 0, dpr: 1, alpha: 1, hover: null, sel: null, pulses: [], autoFit: true, lastFit: 0 };
+const G = { nodes: [], map: {}, edges: [], ek: new Map(), mesh: [], meshAlpha: 0, cam: { x: 0, y: 0, k: 1 }, w: 0, h: 0, dpr: 1, alpha: 1, hover: null, sel: null, pulses: [], autoFit: true, lastFit: 0,
+  show: { jer: true, flow: true, vig: true, coord: true } };
 function ekey(a, b) { return a < b ? a + "|" + b : b + "|" + a; }
+// Tipo de vínculo: vigilancia (centinelas), flujo (actores e IA), jerarquía (coordinador u orquestador → su equipo), coordinación (pares).
+function edgeCat(A, B, kind) {
+  if (A.group === "sen" || B.group === "sen") return "vig";
+  if (!A.isAgent || !B.isAgent || kind === "flow") return "flow";
+  if (A.id === "AG-33" || B.id === "AG-33") return "jer";
+  if (A.orch && B.orch) return "coord";
+  if ((A.orch && B.group === A.group) || (B.orch && A.group === B.group)) return "jer";
+  return "coord";
+}
 function addEdge(a, b, kind = "struct") {
   const k = ekey(a, b); if (G.ek.has(k)) return G.ek.get(k);
-  const e = { a: G.map[a], b: G.map[b], kind, est: false, glow: 0 }; G.ek.set(k, e); G.edges.push(e);
+  const e = { a: G.map[a], b: G.map[b], kind, est: false, glow: 0 }; e.cat = edgeCat(e.a, e.b, kind); G.ek.set(k, e); G.edges.push(e);
   e.a.deg++; e.b.deg++; return e;
 }
+function mixHex(h1, h2, t) {
+  const p = h => { const v = parseInt(h.slice(1), 16); return [v >> 16 & 255, v >> 8 & 255, v & 255]; };
+  const a = p(h1), b = p(h2); return `rgb(${a.map((x, i) => Math.round(x + (b[i] - x) * t)).join(",")})`;
+}
 function buildGraph() {
-  const centers = { gov: [-1, -0.9], onb: [-1.25, 0.35], tes: [0.2, 1.1], liq: [1.25, 0.25], sen: [0.35, -1.15], ia: [-0.05, 0.05], act: [0, 0] };
-  NODE_LIST.forEach((n, i) => {
+  NODE_LIST.forEach(n => {
+    const node = { ...n, x: 0, y: 0, vx: 0, vy: 0, deg: 0, state: "idle", flash: 0, fixed: false, fill: mixHex(C.bg, GROUPS[n.group].color, 0.13) };
+    G.nodes.push(node); G.map[n.id] = node;
+  });
+  STRUCT_EDGES.forEach(([a, b]) => addEdge(a, b));
+  for (let i = 0; i < AGENT_IDS.length; i++) for (let j = i + 1; j < AGENT_IDS.length; j++) G.mesh.push([G.map[AGENT_IDS[i]], G.map[AGENT_IDS[j]]]);
+  seedLayout(false);
+}
+// Siembra la disposición: los 5 equipos toman lugares al azar alrededor del coordinador, con giro y espejo aleatorios.
+function seedLayout(shuffle) {
+  const slots = [[-1, -0.9], [-1.25, 0.35], [0.2, 1.1], [1.25, 0.25], [0.35, -1.15]];
+  const order = ["gov", "onb", "tes", "liq", "sen"];
+  if (shuffle) for (let i = slots.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [slots[i], slots[j]] = [slots[j], slots[i]]; }
+  const centers = { ia: [-0.05, 0.05], act: [0, 0] }; order.forEach((gname, i) => centers[gname] = slots[i]);
+  const th = shuffle ? rand(-0.5, 0.5) : 0, flip = shuffle && Math.random() < 0.5 ? -1 : 1, cs = Math.cos(th), sn = Math.sin(th);
+  for (const n of G.nodes) {
     let [cx, cy] = centers[n.group];
     if (n.id === "AG-33") { cx = 0; cy = -0.25; }
     if (n.id === "CLIENTE") { cx = -1.9; cy = -0.1; }
     if (n.id === "EXCH") { cx = -0.6; cy = 1.5; }
     if (n.id === "PROV") { cx = 1.9; cy = 0.9; }
-    const node = { ...n, x: cx * 260 + rand(-50, 50), y: cy * 230 + rand(-50, 50), vx: 0, vy: 0, deg: 0, state: "idle", flash: 0, fixed: false };
-    G.nodes.push(node); G.map[n.id] = node;
-  });
-  STRUCT_EDGES.forEach(([a, b]) => addEdge(a, b));
-  for (let i = 0; i < AGENT_IDS.length; i++) for (let j = i + 1; j < AGENT_IDS.length; j++) G.mesh.push([G.map[AGENT_IDS[i]], G.map[AGENT_IDS[j]]]);
+    cx *= flip; const rx = cx * cs - cy * sn, ry = cx * sn + cy * cs;
+    n.x = rx * 300 + rand(-60, 60); n.y = ry * 250 + rand(-60, 60); n.vx = n.vy = 0;
+  }
+  G.alpha = 1; G.autoFit = true;
 }
-function nodeR(n) { return (n.orch ? 7 : 4.2) + Math.sqrt(n.deg) * 1.1; }
+function baseR(n) { return n.id === "AG-33" ? 25 : n.orch ? 20 : n.isAgent ? 15.5 : 14; }
+function nodeR(n) { return baseR(n) * Math.max(0.5, Math.min(1.4, 0.35 + 0.65 * G.cam.k)); }
 function physics() {
   if (G.alpha < 0.004) return;
   const ns = G.nodes, a = G.alpha;
   for (let i = 0; i < ns.length; i++) for (let j = i + 1; j < ns.length; j++) {
     const p = ns[i], q = ns[j]; let dx = q.x - p.x, dy = q.y - p.y; let d2 = dx * dx + dy * dy || 1;
-    if (d2 > 250000) continue; const f = 4200 / d2 * a; const d = Math.sqrt(d2); dx /= d; dy /= d;
-    p.vx -= dx * f; p.vy -= dy * f; q.vx += dx * f; q.vy += dy * f;
+    if (d2 > 360000) continue; const d = Math.sqrt(d2); let f = 7000 / d2 * a;
+    const minD = baseR(p) + baseR(q) + 26; if (d < minD) f += (minD - d) * 0.12; // evita que los círculos se encimen
+    dx /= d; dy /= d; p.vx -= dx * f; p.vy -= dy * f; q.vx += dx * f; q.vy += dy * f;
   }
   for (const e of G.edges) {
     const p = e.a, q = e.b; const dx = q.x - p.x, dy = q.y - p.y; const d = Math.sqrt(dx * dx + dy * dy) || 1;
-    const L0 = e.kind === "struct" ? 92 : 120; const f = (d - L0) / d * 0.035 * a;
+    const L0 = e.kind === "struct" ? 110 : 140; const f = (d - L0) / d * 0.03 * a;
     p.vx += dx * f; p.vy += dy * f; q.vx -= dx * f; q.vy -= dy * f;
   }
   for (const n of ns) {
-    n.vx -= n.x * (G.w < G.h ? 0.009 : 0.0026) * a; n.vy -= n.y * (G.w < G.h ? 0.0018 : 0.0032) * a;
+    // gravedad según la forma del lienzo: en pantallas anchas el grafo se extiende a lo ancho
+    const ar = G.w && G.h ? G.w / G.h : 1.6; const gx = ar < 1 ? 0.009 : 0.0034 / Math.min(8, 2 * ar ** 3), gy = ar < 1 ? 0.0018 : 0.0042;
+    n.vx -= n.x * gx * a; n.vy -= n.y * gy * a;
     if (n.fixed) { n.vx = n.vy = 0; continue; }
     n.vx *= 0.82; n.vy *= 0.82; n.x += n.vx; n.y += n.vy;
   }
@@ -529,16 +682,16 @@ function toWorld(sx, sy) { return [(sx - G.cam.x) / G.cam.k, (sy - G.cam.y) / G.
 function resize() {
   const r = cv.getBoundingClientRect(); G.dpr = Math.min(2, devicePixelRatio || 1);
   const first = !G.w; G.w = r.width; G.h = r.height; cv.width = Math.round(r.width * G.dpr); cv.height = Math.round(r.height * G.dpr);
-  if (first) fitView(true);
+  if (first) fitView(true); else if (G.autoFit) fitView(false);
 }
 function fitView(instant) {
   if (!G.w) return; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-  for (const n of G.nodes) { x0 = Math.min(x0, n.x); y0 = Math.min(y0, n.y); x1 = Math.max(x1, n.x); y1 = Math.max(y1, n.y); }
+  for (const n of G.nodes) { const r = baseR(n); x0 = Math.min(x0, n.x - r); y0 = Math.min(y0, n.y - r - 14); x1 = Math.max(x1, n.x + r); y1 = Math.max(y1, n.y + r + 18); }
   // Reserva el alto de la barra de herramientas (arriba) y de leyenda/zoom (abajo) para que no tapen nodos.
   const toolsH = $(".gtools").offsetHeight; $(".graph").style.setProperty("--cap-top", toolsH + 18 + "px");
-  const capH = innerWidth <= 760 ? 0 : 64; // #caption aparece y desaparece; se reserva alto fijo (2 líneas)
-  const side = 60, top = toolsH + capH + 34, bot = Math.max($("#legend").offsetHeight, $(".zoom").offsetHeight) + 40 + (innerWidth <= 760 ? 64 : 0); // en móvil #caption va abajo
-  const k = Math.min((G.w - side * 2) / (x1 - x0 || 1), (G.h - top - bot) / (y1 - y0 || 1), 1.6);
+  const capH = innerWidth <= 760 ? 0 : 52; // #caption aparece y desaparece; se reserva alto fijo
+  const side = 40, top = toolsH + capH + 26, bot = Math.max($("#legend").offsetHeight, $(".zoom").offsetHeight) + 24 + (innerWidth <= 760 ? 64 : 0); // en móvil #caption va abajo
+  const k = Math.min((G.w - side * 2) / (x1 - x0 || 1), (G.h - top - bot) / (y1 - y0 || 1), 1.5);
   const target = { k, x: G.w / 2 - (x0 + x1) / 2 * k, y: top + (G.h - top - bot) / 2 - (y0 + y1) / 2 * k };
   if (instant) Object.assign(G.cam, target); else G.camTarget = target;
 }
@@ -556,6 +709,7 @@ function frame(t) {
   G.pulses = G.pulses.filter(p => { if (p.t >= 1) { p.done(); return false; } return true; });
   draw(t); requestAnimationFrame(frame);
 }
+const DASH = { jer: [], flow: [], vig: [4, 5], coord: [1.5, 4] };
 function draw(t) {
   const { w, h, dpr } = G; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
   const k = G.cam.k; const focus = G.hover || G.sel; const nb = focus ? neighbors(focus) : null;
@@ -564,66 +718,82 @@ function draw(t) {
   const meshOn = $("#f-mesh").checked || G.meshAuto;
   G.meshAlpha = reduceMotion ? (meshOn ? 1 : 0) : G.meshAlpha + ((meshOn ? 1 : 0) - G.meshAlpha) * 0.05;
   if (G.meshAlpha > 0.01) {
-    g.lineWidth = 0.5; g.strokeStyle = hexToRgba(C.accent, 0.05 * G.meshAlpha); g.beginPath();
+    g.lineWidth = 0.5; g.strokeStyle = hexToRgba(C.accent, 0.045 * G.meshAlpha); g.beginPath();
     const lim = Math.floor(G.mesh.length * Math.min(1, G.meshProgress ?? 1));
     for (let i = 0; i < lim; i++) { const [p, q] = G.mesh[i]; const [x1, y1] = toScreen(p), [x2, y2] = toScreen(q); g.moveTo(x1, y1); g.lineTo(x2, y2); }
     g.stroke();
   }
   // aristas
   for (const e of G.edges) {
+    if (!G.show[e.cat]) { e.glow *= 0.985; continue; }
     const [x1, y1] = toScreen(e.a), [x2, y2] = toScreen(e.b);
-    const dim = nb && !(nb.has(e.a.id) && nb.has(e.b.id) && (e.a.id === focus || e.b.id === focus));
+    const hot = nb && (e.a.id === focus || e.b.id === focus); const dim = nb && !hot;
+    const gc = GROUPS[e.cat === "vig" ? (e.a.group === "sen" ? e.a : e.b).group : e.a.group].color;
     let col, lw;
-    if (e.est) { col = hexToRgba(GROUPS[e.a.group].color, dim ? 0.08 : 0.38 + e.glow * 0.6); lw = 1 + e.glow * 1.6; }
-    else { col = hexToRgba(C.muted, dim ? 0.03 : 0.12); lw = 0.7; }
-    if (nb && !dim) { col = e.est ? hexToRgba(GROUPS[e.a.group].color, 0.85) : hexToRgba(C.edgeHi, 0.45); lw = 1.4; }
+    if (e.est) { col = hexToRgba(gc, dim ? 0.07 : 0.34 + e.glow * 0.6); lw = 1.1 + e.glow * 1.8; }
+    else { col = e.cat === "vig" ? hexToRgba(gc, dim ? 0.04 : 0.16) : hexToRgba(C.muted, dim ? 0.04 : e.cat === "coord" ? 0.26 : 0.17); lw = 0.8; }
+    if (hot) { col = e.est ? hexToRgba(gc, 0.9) : hexToRgba(C.edgeHi, 0.5); lw = 1.5; }
+    g.setLineDash(e.est && e.cat !== "vig" ? [] : DASH[e.cat]);
     g.strokeStyle = col; g.lineWidth = lw; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
     e.glow *= 0.985;
   }
-  // pulsos
+  g.setLineDash([]);
+  // pulsos: línea encendida y un paquete que viaja
   for (const p of G.pulses) {
     const [x1, y1] = toScreen(p.a), [x2, y2] = toScreen(p.b); const e = easeInOut(p.t);
     const x = x1 + (x2 - x1) * e, y = y1 + (y2 - y1) * e;
-    g.strokeStyle = hexToRgba(p.color, 0.9); g.lineWidth = 2; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x, y); g.stroke();
-    g.save(); g.shadowColor = p.color; g.shadowBlur = 14; g.fillStyle = C.fg; g.beginPath(); g.arc(x, y, 3.2, 0, 7); g.fill(); g.restore();
+    g.strokeStyle = hexToRgba(C.warn, 0.9); g.lineWidth = 2; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x, y); g.stroke();
+    g.save(); g.shadowColor = C.warn; g.shadowBlur = 16; g.fillStyle = C.warn; g.beginPath(); g.arc(x, y, 4.5, 0, 7); g.fill(); g.restore();
   }
   // nodos (las etiquetas se juntan y se dibujan al final, sin solaparse)
   const labels = [];
+  g.textAlign = "center"; g.textBaseline = "middle";
   for (const n of G.nodes) {
-    const [x, y] = toScreen(n); if (x < -40 || y < -40 || x > w + 40 || y > h + 40) continue;
-    const r = Math.max(2.5, nodeR(n) * Math.sqrt(k)); const col = GROUPS[n.group].color;
+    const [x, y] = toScreen(n); if (x < -60 || y < -60 || x > w + 60 || y > h + 60) continue;
+    const r = nodeR(n); const col = GROUPS[n.group].color;
     const dim = nb && !nb.has(n.id); const alive = n.state !== "idle";
-    let a = dim ? 0.15 : alive ? 1 : 0.42;
-    if (n.state === "active") { const pr = reduceMotion ? 0.5 : (Math.sin(t / 180) + 1) / 2; g.fillStyle = hexToRgba(C.accent, 0.18 + pr * 0.18); g.beginPath(); g.arc(x, y, r + 7 + pr * 5, 0, 7); g.fill(); }
+    g.globalAlpha = dim ? 0.2 : 1;
+    const pr = reduceMotion ? 0.5 : (Math.sin(t / 200) + 1) / 2;
+    if (n.state === "active") { g.fillStyle = hexToRgba(col, 0.1 + pr * 0.12); g.beginPath(); g.arc(x, y, r + 8 + pr * 6, 0, 7); g.fill(); }
     if (reduceMotion) n.flash = 0;
-    if (n.flash > 0) { g.strokeStyle = hexToRgba(col, n.flash); g.lineWidth = 2; g.beginPath(); g.arc(x, y, r + 4 + (1 - n.flash) * 14, 0, 7); g.stroke(); n.flash -= 0.02; }
-    g.fillStyle = hexToRgba(col, a); g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
-    if (n.state === "block") { g.strokeStyle = C.crit; g.lineWidth = 2.5; g.beginPath(); g.arc(x, y, r + 3, 0, 7); g.stroke(); }
-    else if (n.state === "warn") { g.strokeStyle = C.warn; g.lineWidth = 2; g.beginPath(); g.arc(x, y, r + 3, 0, 7); g.stroke(); }
-    if (n.auto) { g.save(); g.setLineDash([3, 3]); g.lineDashOffset = reduceMotion ? 0 : -t / 60; g.strokeStyle = hexToRgba(C.fg, dim ? 0.15 : 0.8); g.lineWidth = 1.2; g.beginPath(); g.arc(x, y, r + 5.5, 0, 7); g.stroke(); g.restore(); }
-    if (G.sel === n.id) { g.strokeStyle = C.fg; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, r + 2, 0, 7); g.stroke(); }
-    // candidatas a etiqueta
-    const important = n.orch || n.state === "active" || focus === n.id || (nb && nb.has(n.id)) || (!n.isAgent && k > 0.6);
-    if (showLabels && !dim && (important || k > 0.75)) {
-      const full = k > 1.45 || important;
-      const txt = full ? `${n.isAgent ? n.id + " · " : ""}${n.short}` : (n.isAgent ? n.id : n.short);
-      const prio = (focus === n.id || G.sel === n.id ? 8 : 0) + (n.state === "active" ? 4 : 0) + (n.orch ? 2 : 0) + (alive ? 1 : 0) + nodeR(n) / 100; // empate: gana el nodo más grande
-      labels.push({ x, y: y + r + 4, txt, orch: n.orch, prio, bright: alive || important });
+    if (n.flash > 0) { g.strokeStyle = hexToRgba(col, n.flash); g.lineWidth = 2; g.beginPath(); g.arc(x, y, r + 4 + (1 - n.flash) * 16, 0, 7); g.stroke(); n.flash -= 0.02; }
+    // halo de los nodos vivos
+    if (alive) { g.save(); g.shadowColor = col; g.shadowBlur = n.state === "active" ? 22 + pr * 10 : 12; g.fillStyle = n.fill; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); g.restore(); }
+    g.fillStyle = n.fill; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+    g.strokeStyle = hexToRgba(col, alive ? 1 : 0.5); g.lineWidth = n.orch ? 2.4 : 1.8; g.stroke();
+    if (n.state === "block") { g.strokeStyle = C.crit; g.lineWidth = 2.5; g.beginPath(); g.arc(x, y, r + 4, 0, 7); g.stroke(); }
+    else if (n.state === "warn") { g.strokeStyle = C.warn; g.lineWidth = 2; g.beginPath(); g.arc(x, y, r + 4, 0, 7); g.stroke(); }
+    if (n.auto) {
+      g.save(); g.setLineDash([2.5, 3.5]); g.lineDashOffset = reduceMotion ? 0 : -t / 70; g.strokeStyle = hexToRgba(col, alive ? 0.75 : 0.4); g.lineWidth = 1.2; g.beginPath(); g.arc(x, y, r + 5, 0, 7); g.stroke(); g.restore();
+      if (r > 8) { g.fillStyle = hexToRgba(col, alive ? 0.95 : 0.55); g.font = `600 ${Math.round(Math.max(10, r * 0.75))}px "IBM Plex Sans", system-ui, sans-serif`; g.fillText("∞", x, y - r - 9); }
+    }
+    if (G.sel === n.id) { g.strokeStyle = C.fg; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, r + 2.5, 0, 7); g.stroke(); }
+    // identificador dentro del círculo
+    const fs = Math.min(r * 0.62, (2 * r - 5) / (n.tag.length * 0.6));
+    if (fs >= 5) { g.font = `600 ${fs.toFixed(1)}px "IBM Plex Mono", ui-monospace, monospace`; g.fillStyle = hexToRgba(C.fg, alive ? 0.97 : 0.6); g.fillText(n.tag, x, y + 0.5); }
+    g.globalAlpha = 1;
+    // candidatas a etiqueta bajo el nodo
+    const important = n.orch || n.state === "active" || focus === n.id || (nb && nb.has(n.id)) || !n.isAgent;
+    if (showLabels && !dim && (important || k > 1.15)) {
+      const prio = (focus === n.id || G.sel === n.id ? 8 : 0) + (n.state === "active" ? 4 : 0) + (n.orch ? 2 : 0) + (alive ? 1 : 0) + baseR(n) / 100; // empate: gana el nodo más grande
+      labels.push({ id: n.id, x, y: y + r + (n.auto ? 8 : 5), txt: n.short, orch: n.orch, prio, bright: alive || focus === n.id, sel: focus === n.id });
     }
   }
-  drawLabels(labels);
+  drawLabels(labels, G.nodes.map(n => { const [x, y] = toScreen(n); return { id: n.id, x, y, r: nodeR(n) + 2 }; }));
 }
 // Etiquetas por prioridad: se omite la que choca con una ya dibujada.
-function drawLabels(list) {
+function drawLabels(list, circles) {
   list.sort((a, b) => b.prio - a.prio);
   const placed = []; g.textAlign = "center"; g.textBaseline = "top";
   for (const L of list) {
-    g.font = `${L.orch ? 600 : 400} ${L.orch ? 12 : 11}px "IBM Plex Sans", system-ui, sans-serif`;
-    const tw = g.measureText(L.txt).width; const box = { x0: L.x - tw / 2 - 3, y0: L.y, x1: L.x + tw / 2 + 3, y1: L.y + 15 };
+    g.font = `${L.orch ? 500 : 400} ${L.orch ? 12.5 : 11.5}px "IBM Plex Sans", system-ui, sans-serif`;
+    const tw = g.measureText(L.txt).width; const box = { x0: L.x - tw / 2 - 3, y0: L.y, x1: L.x + tw / 2 + 3, y1: L.y + 16 };
     if (placed.some(p => box.x0 < p.x1 + 2 && box.x1 > p.x0 - 2 && box.y0 < p.y1 + 1 && box.y1 > p.y0 - 1)) continue;
+    // tampoco se escribe encima de otro nodo (salvo el enfocado, que siempre muestra su nombre)
+    if (!L.sel && circles.some(c => c.id !== L.id && c.x + c.r > box.x0 && c.x - c.r < box.x1 && c.y + c.r > box.y0 && c.y - c.r < box.y1)) continue;
     placed.push(box);
-    g.fillStyle = hexToRgba(C.bg, 0.75); g.fillRect(box.x0, box.y0, box.x1 - box.x0, 15);
-    g.fillStyle = L.bright ? hexToRgba(C.fg, 0.95) : hexToRgba(C.muted, 0.9); g.fillText(L.txt, L.x, L.y + 1);
+    g.fillStyle = hexToRgba(C.bg, 0.6); g.fillRect(box.x0, box.y0, box.x1 - box.x0, 16);
+    g.fillStyle = L.bright ? hexToRgba(C.fg, 0.95) : hexToRgba(C.muted, 0.95); g.fillText(L.txt, L.x, L.y + 1.5);
   }
 }
 const easeInOut = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
@@ -636,7 +806,7 @@ function pulse(a, b, dur) {
 
 // Interacción: arrastre, paneo, zoom, selección
 let drag = null;
-function hit(sx, sy) { let best = null, bd = 1e9; for (const n of G.nodes) { const [x, y] = toScreen(n); const d = Math.hypot(x - sx, y - sy); const r = Math.max(8, nodeR(n) * Math.sqrt(G.cam.k) + 4); if (d < r && d < bd) { bd = d; best = n; } } return best; }
+function hit(sx, sy) { let best = null, bd = 1e9; for (const n of G.nodes) { const [x, y] = toScreen(n); const d = Math.hypot(x - sx, y - sy); const r = Math.max(10, nodeR(n) + 3); if (d < r && d < bd) { bd = d; best = n; } } return best; }
 function local(ev) { const r = cv.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; }
 const pointers = new Map();
 cv.addEventListener("pointerdown", ev => {
@@ -668,6 +838,25 @@ $("#z-in").onclick = () => zoomAt(G.w / 2, G.h / 2, 1.25);
 $("#z-out").onclick = () => zoomAt(G.w / 2, G.h / 2, 0.8);
 $("#z-fit").onclick = () => { G.autoFit = true; fitView(false); };
 new ResizeObserver(resize).observe(cv);
+$$("[data-ecat]").forEach(cb => cb.onchange = () => { G.show[cb.dataset.ecat] = cb.checked; });
+
+// Pantalla casi completa: oculta el formulario y deja el grafo con el panel de bitácora/expediente/agente/aprendizaje.
+function setFocus(on) {
+  const app = $(".app"); if (app.classList.contains("focus") === on) return;
+  app.classList.toggle("focus", on);
+  const b = $("#z-full"); b.setAttribute("aria-pressed", on); const lbl = on ? "Salir de pantalla completa (tecla F)" : "Pantalla completa (tecla F)"; b.setAttribute("aria-label", lbl); b.title = lbl;
+  $("#z-full .ex").toggleAttribute("hidden", on); $("#z-full .co").toggleAttribute("hidden", !on);
+  try {
+    if (on && !document.fullscreenElement && document.fullscreenEnabled) document.documentElement.requestFullscreen().catch(() => {});
+    if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  } catch {}
+  G.autoFit = true; G.alpha = Math.max(G.alpha, 0.35); requestAnimationFrame(() => fitView(false));
+}
+$("#z-full").onclick = () => setFocus(!$(".app").classList.contains("focus"));
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement) setFocus(false); });
+document.addEventListener("keydown", ev => {
+  if ((ev.key === "f" || ev.key === "F") && !ev.ctrlKey && !ev.metaKey && !ev.altKey && !ev.target.closest("input, select, textarea") && $("#modal").hidden) { ev.preventDefault(); setFocus(!$(".app").classList.contains("focus")); }
+});
 
 /* ============================================================
    5. Estado de la corrida y UI
@@ -681,10 +870,10 @@ function readInputs() {
   const v = id => $("#" + id).value.trim(); const n = id => parseFloat($("#" + id).value);
   return { rs: v("f-rs"), rfc: v("f-rfc").toUpperCase(), curp: v("f-curp").toUpperCase(), rep: v("f-rep"), prod: v("f-prod"),
     qty: Math.max(1, Math.round(n("f-qty") || 0)), unit: n("f-unit") || 0, freight: n("f-freight") || 0, fx: n("f-fx") || 0,
-    coin: v("f-coin"), net: v("f-net"), wallet: v("f-wallet"), cust: v("f-cust"), mode: v("f-mode"),
+    coin: v("f-coin"), net: v("f-net"), wallet: v("f-wallet"), prov: v("f-prov") || "Proveedor HK", cust: v("f-cust"), mode: v("f-mode"),
     uma: n("f-uma") || 0, umbral: n("f-umbral") || 0, igi: (n("f-igi") || 0) / 100, glob: (n("f-global") || 0) / 100 };
 }
-function newCtx() { return { in: readInputs(), d: {}, docs: [], startedAt: new Date() }; }
+function newCtx() { const i = readInputs(); return { in: i, x: runExtras(i), d: {}, docs: [], startedAt: new Date() }; }
 
 function log(agent, msg, level = "info") {
   const li = document.createElement("li"); li.dataset.l = level;
@@ -704,6 +893,7 @@ function updateStats() {
   $("#st-agents").textContent = `${act}/33`;
   $("#st-edges").textContent = G.edges.filter(e => e.est).length + (G.meshAuto && G.meshProgress >= 1 ? G.mesh.length : 0);
   $("#st-docs").textContent = ctx ? ctx.docs.length : 0; $("#n-docs").textContent = ctx ? ctx.docs.length : 0;
+  $("#g-count").textContent = `${G.nodes.length} nodos · ${G.edges.length} vínculos`;
   $("#st-amount").textContent = ctx && ctx.d.spei ? MXN.format(ctx.d.spei) : "—";
 }
 function renderPhases(cur, status) {
@@ -714,7 +904,7 @@ function renderPhases(cur, status) {
   }).join("");
 }
 function renderLegend() {
-  $("#legend").innerHTML = Object.values(GROUPS).map(gr => `<span><i style="background:${gr.color}"></i>${gr.name}</span>`).join("") + `<span class="auto"><i></i>Autoevolutivo</span>`;
+  $("#legend").innerHTML = Object.values(GROUPS).map(gr => `<span title="${esc(gr.name)}" style="color:${gr.color}"><i style="background:${gr.color}"></i>${gr.short}${gr.range ? `<small>${gr.range}</small>` : ""}</span>`).join("") + `<span class="auto"><b>∞</b>Autoevolutivo</span>`;
 }
 
 // Pestañas
@@ -827,7 +1017,7 @@ function acum180() { const lim = Date.now() - 180 * 864e5; return L.runs.filter(
 const sentinels = ["21","22","23","24","25","26","27","28","29","30","31","32"].map(n => "AG-" + n);
 const STEPS = [
   // ---------- Pedido
-  { ph: "pedido", from: "CLIENTE", to: "AG-33", cap: "La clienta registra la compra de playeras", run(c) {
+  { ph: "pedido", from: "CLIENTE", to: "AG-33", cap: c => `El cliente registra la compra de ${c.in.qty} ${c.x.product.noun}`, run(c) {
     const i = c.in; c.d.goods = r2(i.qty * i.unit); c.d.totalUSD = r2(c.d.goods + i.freight);
     c.d.po = "PO-" + new Date().getFullYear() + "-" + randDigits(5);
     addDoc("CLIENTE", "Orden de pedido interna", { Folio: c.d.po, Cliente: i.rs, RFC: i.rfc, Mercancía: i.prod, Piezas: i.qty, "Precio unitario USD": USD.format(i.unit), "Subtotal mercancía": USD.format(c.d.goods), "Flete aéreo": USD.format(i.freight), "Total a pagar al proveedor": USD.format(c.d.totalUSD), Proveedor: byId.PROV.name, "Medio de pago": `${i.coin} (activo virtual)` });
@@ -852,12 +1042,12 @@ const STEPS = [
     log("AG-07", "Acta, folio mercantil y poder extraídos. RFC y CURP con estructura válida.");
   } },
   { ph: "kyb", from: "AG-07", to: "IA1.1", cap: "Subagente Concilia arma el expediente KYC del exchange", run(c) {
-    const i = c.in; const dom = daysAgo(Math.floor(rand(12, 70)));
-    c.d.clabeOrigen = clabe("012180" + randDigits(11));
+    const i = c.in; const dom = daysAgo(Math.floor(c.x.ev.oldAddr ? rand(96, 140) : rand(12, 70)));
+    c.d.clabeOrigen = clabe(c.x.bank[0] + "180" + randDigits(11));
     addDoc("IA1.1", "Identificación oficial · validación biométrica", { Titular: i.rep, Documento: "INE (credencial para votar)", Vigencia: String(new Date().getFullYear() + 4), "Prueba de vida": "Aprobada", "Coincidencia facial": (rand(96, 99.6)).toFixed(1) + "%", CURP: i.curp });
     addDoc("IA1.1", "CSF y CURP", { "Constancia de Situación Fiscal": `${i.rfc} · emitida ${isoDate(daysAgo(5))}`, "Estatus en el padrón": "Activo", "CURP rep. legal": i.curp, "Beneficiarios finales": "Adjuntos a expediente UBO (AG-03)" });
-    addDoc("IA1.1", "Comprobante de domicilio", { Tipo: "Recibo de luz CFE", Fecha: isoDate(dom), Antigüedad: Math.round((Date.now() - dom) / 864e5) + " días (máximo 90)", Domicilio: "Av. Insurgentes Sur 1234, Col. Del Valle, CDMX" });
-    addDoc("IA1.1", "Estado de cuenta de origen de recursos", { Banco: "Banco emisor (simulado)", Titular: i.rs, "CLABE origen": c.d.clabeOrigen, Periodo: isoDate(daysAgo(30)) + " a " + isoDate(daysAgo(1)), "Saldo promedio": MXN.format(rand(180000, 420000)), _nota: "Las plataformas no aceptan depósitos de terceros: la cuenta debe estar a nombre del cliente." });
+    addDoc("IA1.1", "Comprobante de domicilio", { Tipo: "Recibo de luz CFE", Fecha: isoDate(dom), Antigüedad: Math.round((Date.now() - dom) / 864e5) + " días (máximo 90)", Domicilio: c.x.addr }, c.x.ev.oldAddr ? "warn" : "ok");
+    addDoc("IA1.1", "Estado de cuenta de origen de recursos", { Banco: c.x.bank[1] + " (simulado)", Titular: i.rs, "CLABE origen": c.d.clabeOrigen, Periodo: isoDate(daysAgo(30)) + " a " + isoDate(daysAgo(1)), "Saldo promedio": MXN.format(rand(180000, 420000)), _nota: "Las plataformas no aceptan depósitos de terceros: la cuenta debe estar a nombre del cliente." });
     log("IA1.1", "INE con biometría, CURP, CSF, domicilio y estado de cuenta adjuntos al expediente.");
   } },
   { ph: "kyb", from: "IA1.1", to: "IA1", cap: "Expediente KYC entregado al agente de salida del MXN", run() { log("IA1", "Expediente KYC completo para operar en el exchange (Ley Fintech / LFPIORPI)."); } },
@@ -867,15 +1057,22 @@ const STEPS = [
     log("AG-02", "Estructura societaria verificada. Siguiente revisión en 180 días.");
   } },
   { ph: "kyb", from: "AG-02", to: "AG-25", cap: "Centinela de vigencias", run(c) {
+    if (c.x.ev.oldAddr) {
+      setNodeState("AG-25", "warn");
+      addDoc("IA1.1", "Comprobante de domicilio actualizado", { Tipo: "Recibo de agua", Fecha: isoDate(daysAgo(Math.floor(rand(3, 15)))), Domicilio: c.x.addr, Motivo: "El comprobante original superaba 90 días" });
+      return log("AG-25", "Comprobante de domicilio con más de 90 días. Se pidió uno nuevo a la empresa y ya está en el expediente.", "warn");
+    }
     log("AG-25", "Vigencias OK: INE, poder, CSF (5 días) y comprobante de domicilio (< 90 días).", "ok");
   } },
   { ph: "kyb", from: "AG-01", to: "AG-03", cap: "Beneficiarios finales y e.firma", run(c) {
-    const ubo = [{ Nombre: c.in.rep, Participación: "60%", Umbral: "> 25% · UBO", "INE/Pasaporte": "Vigente" }, { Nombre: "Jorge Iván Méndez Soto", Participación: "40%", Umbral: "> 25% · UBO", "INE/Pasaporte": "Vigente" }];
+    const ubo = [{ Nombre: c.in.rep, Participación: c.x.share + "%", Umbral: "> 25% · UBO", "INE/Pasaporte": "Vigente" }, { Nombre: c.x.ubo2, Participación: (100 - c.x.share) + "%", Umbral: "> 25% · UBO", "INE/Pasaporte": "Vigente" }];
     addDoc("AG-03", "Beneficiarios finales (UBO)", { Accionistas: ubo, "e.firma (SAT)": `Vigente hasta ${isoDate(new Date(Date.now() + 700 * 864e5))}`, "Número de serie e.firma": "00001000000" + randDigits(9) });
     log("AG-03", "2 beneficiarios finales con participación mayor a 25%. e.firma vigente.");
   } },
   { ph: "kyb", from: "AG-03", to: "AG-23", cap: "Cruce contra listas de sanciones", run(c) {
-    addDoc("AG-23", "Screening de sanciones", { Personas: [c.in.rs, c.in.rep, "Jorge Iván Méndez Soto", byId.PROV.name].join(", "), Listas: "Lista de Personas Bloqueadas UIF, OFAC SDN, ONU, UE", Resultado: "Sin coincidencias", Fecha: new Date().toISOString() });
+    const hom = c.x.ev.homonym ? pick([c.in.rep, c.x.ubo2]) : null;
+    addDoc("AG-23", "Screening de sanciones", { Personas: [c.in.rs, c.in.rep, c.x.ubo2, byId.PROV.name].join(", "), Listas: "Lista de Personas Bloqueadas UIF, OFAC SDN, ONU, UE", Resultado: hom ? `Coincidencia parcial por homonimia (${hom}); descartada por fecha de nacimiento y CURP` : "Sin coincidencias", Fecha: new Date().toISOString() }, hom ? "warn" : "ok");
+    if (hom) { setNodeState("AG-23", "warn"); return log("AG-23", `Coincidencia parcial de nombre para ${esc(hom)}. Descartada al cruzar fecha de nacimiento y CURP; queda constancia.`, "warn"); }
     log("AG-23", "Sin coincidencias en listas de control.", "ok");
   } },
   { ph: "kyb", from: "AG-05", to: "AG-08", cap: "Perfil transaccional autoevolutivo", run(c) {
@@ -897,7 +1094,7 @@ const STEPS = [
   { ph: "acuerdo", from: "AG-05", to: "IA2", cap: "Cliente habilitado: inicia el acuerdo con Hong Kong", run() { log("IA2", "Cumplimiento HK activo: SFC/HKMA, AML y Travel Rule."); } },
   { ph: "acuerdo", from: "IA2", to: "IA2.1", cap: "Se emite la orden de compra", run(c) {
     const i = c.in;
-    addDoc("IA2.1", "Orden de compra (Purchase Order)", { "PO No.": c.d.po, Comprador: `${i.rs} · ${i.rfc}`, Vendedor: byId.PROV.name, Items: [{ Modelo: "Crew neck tee", Material: "100% algodón, tejido de punto", Tallas: "S 4 / M 6 / L 6 / XL 4", Cantidad: i.qty, "Precio unitario USD": i.unit, "Importe USD": c.d.goods }], Incoterm: "CPT Ciudad de México (flete incluido)", "Cláusula de pago": `Pago total en ${i.coin}, paridad 1 ${i.coin} = 1 USD, mediante transferencia de activos virtuales.` });
+    addDoc("IA2.1", "Orden de compra (Purchase Order)", { "PO No.": c.d.po, Comprador: `${i.rs} · ${i.rfc}`, Vendedor: byId.PROV.name, Items: [{ Modelo: c.x.product.model, Material: c.x.product.material, Tallas: c.x.sizes, Cantidad: i.qty, "Precio unitario USD": i.unit, "Importe USD": c.d.goods }], Incoterm: "CPT Ciudad de México (flete incluido)", "Cláusula de pago": `Pago total en ${i.coin}, paridad 1 ${i.coin} = 1 USD, mediante transferencia de activos virtuales.` });
     log("IA2.1", `PO ${c.d.po} emitida con cláusula de pago en ${i.coin}.`);
   } },
   { ph: "acuerdo", from: "IA2.1", to: "PROV", cap: "PO enviada al proveedor en Hong Kong", run() { log("PROV", "Proveedor acepta la PO y el pago en activos virtuales."); } },
@@ -908,9 +1105,13 @@ const STEPS = [
     addDoc("IA2.1", "Factura proforma (Proforma Invoice)", { "PI No.": c.d.pi, "Referencia PO": c.d.po, "Monto total": `${N2.format(c.d.totalUSD)} ${i.coin}`, Paridad: `1 ${i.coin} = 1 USD`, "Wallet destino": i.wallet, "Redes aceptadas": nets.map(n => NETS[n].std).join(", "), "Tipo de wallet": i.cust === "custodial" ? "Custodial · VASP regulado en Hong Kong" : "No custodial", Vigencia: "7 días" });
     log("PROV", `Proforma ${c.d.pi}: ${N2.format(c.d.totalUSD)} ${i.coin} a <span style="font-family:var(--f-mono)">${esc(i.wallet.slice(0, 10))}…</span>`);
   } },
-  { ph: "acuerdo", from: "IA2.1", to: "AG-27", cap: "Coherencia PO contra proforma", run(c) { log("AG-27", `PO y proforma coinciden: ${c.in.qty} piezas, ${USD.format(c.d.totalUSD)}, mismas partes.`, "ok"); } },
+  { ph: "acuerdo", from: "IA2.1", to: "AG-27", cap: "Coherencia PO contra proforma", run(c) {
+    if (c.x.ev.piMismatch) { setNodeState("AG-27", "warn"); return log("AG-27", `La proforma traía ${c.in.qty + pick([-2, -1, 1, 2, 5])} piezas contra ${c.in.qty} de la PO. El proveedor la reemitió corregida; ya coinciden en ${USD.format(c.d.totalUSD)}.`, "warn"); }
+    log("AG-27", `PO y proforma coinciden: ${c.in.qty} piezas, ${USD.format(c.d.totalUSD)}, mismas partes.`, "ok");
+  } },
   { ph: "acuerdo", from: "AG-24", to: "AG-30", cap: "Lectura de gas y latencia en 4 redes", run(c) {
     c.d.cong = {}; for (const k in NETS) c.d.cong[k] = k === "ethereum" ? rand(0.8, 2.6) : rand(0.8, 1.6);
+    if (c.x.ev.gasSpike) { c.d.cong[c.x.ev.gasSpike] *= rand(2.4, 4); setNodeState("AG-24", "warn"); log("AG-24", `Pico de congestión en ${NETS[c.x.ev.gasSpike].name}. AG-30 lo penaliza al elegir ruta.`, "warn"); }
     addDoc("AG-24", "Lectura de congestión de red", { Redes: Object.entries(NETS).map(([k, n]) => ({ Red: n.name, "Gas USD": r2(n.gas * c.d.cong[k] * 1000) / 1000, "Factor congestión": r2(c.d.cong[k]), "Tiempo a finalidad (s)": Math.round(n.block * n.conf * c.d.cong[k]) })) });
     log("AG-24", Object.entries(c.d.cong).map(([k, v]) => `${NETS[k].name} ×${v.toFixed(2)}`).join(" · "));
   } },
@@ -980,7 +1181,7 @@ const STEPS = [
   } },
   { ph: "liq", from: "PROV", to: "IA2.1", cap: "Factura comercial definitiva y recibo de pago", run(c) {
     const i = c.in; c.d.ci = "CI-HK-" + randDigits(6);
-    addDoc("IA2.1", "Commercial Invoice y Payment Receipt", { "Invoice No.": c.d.ci, "Ref. PO / PI": `${c.d.po} / ${c.d.pi}`, Descripción: `${i.prod}`, Cantidad: i.qty, "Valor unitario USD": i.unit, "Flete USD": i.freight, "Total USD": c.d.totalUSD, Comprador: `${i.rs}, Ciudad de México`, Vendedor: `${byId.PROV.name}, Kowloon, Hong Kong`, "Payment receipt": `Deuda liquidada mediante ${N2.format(c.d.totalUSD)} ${i.coin}, TXID ${c.d.txid.slice(0, 18)}…` });
+    addDoc("IA2.1", "Commercial Invoice y Payment Receipt", { "Invoice No.": c.d.ci, "Ref. PO / PI": `${c.d.po} / ${c.d.pi}`, Descripción: `${i.prod}`, Cantidad: i.qty, "Valor unitario USD": i.unit, "Flete USD": i.freight, "Total USD": c.d.totalUSD, Comprador: `${i.rs}, Ciudad de México`, Vendedor: `${byId.PROV.name}, ${c.x.provDistrict}, Hong Kong`, "Payment receipt": `Deuda liquidada mediante ${N2.format(c.d.totalUSD)} ${i.coin}, TXID ${c.d.txid.slice(0, 18)}…` });
     log("IA2.1", `Factura comercial ${c.d.ci} y recibo de pago emitidos.`, "ok");
   } },
   { ph: "liq", from: "IA2.1", to: "AG-27", cap: "Coherencia contrato, factura y TXID", run(c) { log("AG-27", "PO, proforma, invoice y TXID coinciden en monto, partes y wallet.", "ok"); } },
@@ -1006,10 +1207,10 @@ const STEPS = [
     c.d.va = r2(va); c.d.igi = r2(igi); c.d.dta = r2(dta); c.d.iva = r2(iva); c.d.taxes = r2(igi + dta + iva);
     c.d.ped = `${String(new Date().getFullYear()).slice(2)} 47 ${randDigits(4)} ${randDigits(7)}`; c.d.awb = "160-" + randDigits(8);
     addDoc("IA3.3", "Padrón de importadores y encargo conferido", { "Padrón General": "Activo", "Padrón Sectorial": "Sector 11 · Textil y confección (activo)", "Encargo conferido": "Firmado con e.firma a favor del agente aduanal, patente " + c.d.ped.split(" ")[2] });
-    addDoc("IA3.3", "Factura comercial traducida y lista de empaque", { Descripción: "Playera cuello redondo, 100% algodón, tejido de punto", "Fracción arancelaria": "6109.10.01", "Valor total USD": vaUSD, Cajas: 1, "Peso bruto kg": r2(i.qty * 0.2 + 0.6), "Peso neto kg": r2(i.qty * 0.18), Dimensiones: "40 × 30 × 25 cm", Tallas: "S 4 / M 6 / L 6 / XL 4 · Blanco y negro" });
+    addDoc("IA3.3", "Factura comercial traducida y lista de empaque", { Descripción: i.prod, "Subpartida SA": c.x.product.hs + " (fracción TIGIE y NICO a confirmar)", "Valor total USD": vaUSD, "Peso bruto kg": r2(i.qty * c.x.product.kg * 1.1 + 0.6), "Peso neto kg": r2(i.qty * c.x.product.kg), Cajas: Math.max(1, Math.ceil(i.qty * c.x.product.kg / 9)), Tallas: c.x.sizes + " · " + c.x.colors });
     addDoc("IA3.3", "Guía aérea (AWB)", { AWB: c.d.awb, Origen: "HKG · Hong Kong International", Destino: "MEX · AICM", Transportista: "Aerolínea de carga (simulada)" });
     addDoc("IA3.3", "COVE y Manifestación de Valor (VUCEM)", { COVE: "COVE" + randHex(9).toUpperCase(), "Valor en aduana": MXN.format(va), "Método de valoración": "Valor de transacción", "Forma de pago": `Transferencia de activos virtuales (permuta). Prueba: TXID ${c.d.txid.slice(0, 18)}…` });
-    addDoc("IA3.3", "Origen y etiquetado NOM-004-SE-2021", { "Declaración de origen": "China continental, confección en Dongguan; exporta Hong Kong", "Cuotas compensatorias": "Revisadas · no aplica a esta fracción en la demo", "Etiqueta en español": "Marca, 100% algodón, talla, cuidados, país de origen e importador " + i.rfc, Evidencia: "Fotografías por talla adjuntas" });
+    addDoc("IA3.3", "Origen y etiquetado NOM-004-SE-2021", { "Declaración de origen": `China continental, confección en ${c.x.origin}; exporta Hong Kong`, "Cuotas compensatorias": "Revisadas · no aplica a esta fracción en la demo", "Etiqueta en español": "Marca, 100% algodón, talla, cuidados, país de origen e importador " + i.rfc, Evidencia: "Fotografías por talla adjuntas" });
     addDoc("IA3.3", "Pedimento de importación pagado", { Pedimento: c.d.ped, "Clave": "A1 · Importación definitiva", "Valor en aduana": MXN.format(va), Contribuciones: [{ Concepto: "IGI", Tasa: pct(i.igi, 1), "Importe MXN": c.d.igi }, { Concepto: "DTA", Tasa: "8 al millar", "Importe MXN": c.d.dta }, { Concepto: "IVA", Tasa: "16%", "Importe MXN": c.d.iva }], "Total pagado": MXN.format(c.d.taxes), _nota: "Número de pedimento con formato año, aduana (47 = AICM), patente y consecutivo; simulado." });
     log("IA3.3", `Pedimento ${c.d.ped}. IGI ${MXN.format(igi)} + DTA ${MXN.format(dta)} + IVA ${MXN.format(iva)} = <strong>${MXN.format(c.d.taxes)}</strong>.`, "ok");
   } },
@@ -1017,7 +1218,7 @@ const STEPS = [
   { ph: "aduana", from: "IA3.3", to: "AG-18", when: c => c.in.mode === "formal", cap: "Pedimento vinculado al expediente", run(c) { log("AG-18", `Pedimento ${c.d.ped} ligado a SPEI, TXID e invoice. Compra deducible.`, "ok"); } },
   // ---------- Aduana: paquetería
   { ph: "aduana", from: "IA3", to: "IA-PROV", when: c => c.in.mode === "courier", cap: "Despacho simplificado por paquetería", run(c) {
-    const i = c.in; const va = c.d.totalUSD * c.d.fxT; const glob = va * i.glob; c.d.va = r2(va); c.d.taxes = r2(glob); c.d.guide = "DHL " + randDigits(10);
+    const i = c.in; const va = c.d.totalUSD * c.d.fxT; const glob = va * i.glob; c.d.va = r2(va); c.d.taxes = r2(glob); c.d.guide = c.x.courier + " " + randDigits(10);
     const presume = i.qty >= 12; c.d.presume = presume;
     addDoc("IA-PROV", "RFC / CURP del destinatario", { Destinatario: i.rs, RFC: i.rfc, Guía: c.d.guide });
     addDoc("IA-PROV", "Carta de uso personal / aclaratoria de valor", { Declarante: i.rep, Declaración: "Bajo protesta de decir verdad, las prendas son para uso personal y no para venta.", Piezas: i.qty, "Valor declarado": USD.format(c.d.totalUSD) }, presume ? "warn" : "ok");
@@ -1028,7 +1229,7 @@ const STEPS = [
   { ph: "aduana", from: "IA-PROV", to: "AG-18", when: c => c.in.mode === "courier", cap: "Soporte de paquetería al expediente", run(c) { log("AG-18", "Guía, carta y TXID ligados. Sin pedimento: la compra no es deducible.", c.d.presume ? "warn" : "info"); } },
   // ---------- Cierre
   { ph: "cierre", from: "AG-18", to: "AG-17", cap: "Póliza contable para el ERP bajo NIF", run(c) {
-    const i = c.in; const rule = `Textil · importación pagada en ${i.coin} vía ${NETS[c.d.net].name}`; const known = L.ag17.rules.includes(rule); c.d.newRule = known ? null : rule;
+    const i = c.in; const rule = `Textil ${c.x.product.hs} · importación pagada en ${i.coin} vía ${NETS[c.d.net].name}`; const known = L.ag17.rules.includes(rule); c.d.newRule = known ? null : rule;
     const lines = [
       { Cuenta: "Activos virtuales (" + i.coin + ")", Cargo: c.d.conv, Abono: 0 },
       { Cuenta: "Comisiones bancarias y de exchange", Cargo: c.d.fee, Abono: 0 },
@@ -1062,9 +1263,9 @@ const STEPS = [
     learnFromRun(c); G.meshAuto = true; G.meshProgress = 0;
     log("AG-33", `Malla completa: <strong>528 enlaces</strong> entre los 33 agentes. Memoria de 8 agentes autoevolutivos actualizada.`, "ok");
   } },
-  { ph: "cierre", from: "AG-33", to: "CLIENTE", cap: "Operación cerrada y notificada a la clienta", run(c) {
+  { ph: "cierre", from: "AG-33", to: "CLIENTE", cap: "Operación cerrada y notificada al cliente", run(c) {
     const i = c.in; const total = c.d.spei + c.d.taxes;
-    log("AG-31", `Resumen enviado: ${i.qty} playeras pagadas con ${N2.format(c.d.totalUSD)} ${i.coin}. Costo total en México ${MXN.format(total)} (${MXN.format(total / i.qty)} por pieza).`, "ok");
+    log("AG-31", `Resumen enviado: pago de ${i.qty} ${c.x.product.noun} con ${N2.format(c.d.totalUSD)} ${i.coin}. Costo total en México ${MXN.format(total)} (${MXN.format(total / i.qty)} por pieza).`, "ok");
   } },
 ];
 function looksEvm(w) { return /^0x[a-fA-F0-9]{40}$/.test(w); }
@@ -1094,7 +1295,7 @@ async function execStep(i, tok) {
   ctx.phase = s.ph; renderPhases(s.ph);
   const targets = [].concat(s.to); const from = G.map[s.from];
   from.state = from.state === "idle" ? "active" : from.state; if (from.state === "done") from.state = "active";
-  setCaption(s.from, s.cap);
+  setCaption(s.from, typeof s.cap === "function" ? s.cap(ctx) : s.cap);
   const edges = targets.map(t => addEdge(s.from, t, G.ek.has(ekey(s.from, t)) ? "struct" : "flow"));
   const dur = (s.fast ? 520 : 760) / speed();
   await Promise.all(targets.map((t, j) => wait(s.fast ? j * 40 / speed() : 0, tok).then(() => pulse(s.from, t, dur))));
@@ -1124,9 +1325,16 @@ async function play(single = false) {
   if (runner.i >= STEPS.length && !runner.blocked) finish();
   syncControls();
 }
+let runCount = 0, skipRandom = false;
 function startRun() {
-  ctx = newCtx(); runner.t0 = performance.now(); $("#log").innerHTML = "";
-  log(null, `Nueva operación para <strong>${esc(ctx.in.rs)}</strong>. Los nodos se conectan uno a uno conforme cada agente actúa.`);
+  const vary = $("#f-vary").checked;
+  if (vary && !skipRandom) randomizeInputs();
+  skipRandom = false;
+  ctx = newCtx(); runner.t0 = performance.now(); $("#log").innerHTML = ""; runCount++;
+  byId.PROV.name = G.map.PROV.name = `${ctx.in.prov} · Hong Kong`;
+  if (vary && runCount > 1) { seedLayout(true); G.camTarget = null; }
+  if (G.sel) renderAgent(G.sel);
+  log(null, `Corrida ${runCount}: operación para <strong>${esc(ctx.in.rs)}</strong>, ${ctx.in.qty} ${esc(ctx.x.product.noun)} de ${esc(ctx.in.prov)}. Los nodos se conectan uno a uno conforme cada agente actúa.`);
 }
 function finish() {
   runner.done = true; renderPhases("cierre"); $$(".phase").forEach(p => p.dataset.s = "done");
@@ -1157,20 +1365,30 @@ $("#b-play").onclick = () => { if (runner.done || runner.blocked) { resetRun(); 
 $("#b-step").onclick = () => play(true);
 $("#b-reset").onclick = () => { resetRun(); syncControls(); };
 
-// Escenarios
+// Escenarios: con "Datos nuevos" activo se genera otra operación y encima se aplica lo que define el escenario.
 const SCEN = {
-  base: { "f-qty": 20, "f-unit": "6.80", "f-freight": 48, "f-mode": "formal", "f-net": "auto", "f-coin": "USDT", "f-wallet": "0x7a3F9c1B4e2D8a6f0C5b9E1d3A7c2F4b6D8e0A1c" },
-  courier: { "f-qty": 20, "f-mode": "courier", "f-net": "auto", "f-wallet": "0x7a3F9c1B4e2D8a6f0C5b9E1d3A7c2F4b6D8e0A1c" },
-  solana: { "f-net": "auto", "f-coin": "USDC", "f-wallet": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU" },
-  badwallet: { "f-net": "auto", "f-wallet": "0x7a3F9c1B4e2D8a6f0C5b9E1d3A7c2F4b6D8e0A" },
-  uif: { "f-qty": 1200, "f-unit": "6.80", "f-freight": 380, "f-mode": "formal", "f-net": "auto", "f-wallet": "0x7a3F9c1B4e2D8a6f0C5b9E1d3A7c2F4b6D8e0A1c" },
+  base: () => ({ "f-mode": "formal" }),
+  courier: () => ({ "f-mode": "courier", "f-qty": Math.round(rand(10, 30)) }),
+  solana: () => ({ "f-net": "auto", "f-coin": "USDC", "f-wallet": randB58(44) }),
+  badwallet: () => ({ "f-net": "auto", "f-wallet": randEvm().slice(0, 36 + Math.floor(rand(0, 4))) }),
+  uif: () => ({ "f-qty": Math.round(rand(1100, 1600)), "f-unit": rand(6.2, 8.4).toFixed(2), "f-freight": Math.round(rand(320, 520)), "f-mode": "formal", "f-net": "auto" }),
 };
-$$("[data-scen]").forEach(b => b.onclick = () => { for (const [k, v] of Object.entries({ ...SCEN.base, ...SCEN[b.dataset.scen] })) $("#" + k).value = v; resetRun(); play(); });
+const SCEN_FIXED = { "f-qty": 20, "f-unit": "6.80", "f-freight": 48, "f-mode": "formal", "f-net": "auto", "f-coin": "USDT", "f-wallet": "0x7a3F9c1B4e2D8a6f0C5b9E1d3A7c2F4b6D8e0A1c" };
+$$("[data-scen]").forEach(b => b.onclick = () => {
+  resetRun();
+  if ($("#f-vary").checked) randomizeInputs(); else for (const [k, v] of Object.entries(SCEN_FIXED)) $("#" + k).value = v;
+  if (b.dataset.scen !== "solana" && !looksEvm($("#f-wallet").value)) { $("#f-wallet").value = randEvm(); $("#f-net").value = "auto"; }
+  for (const [k, v] of Object.entries(SCEN[b.dataset.scen]())) $("#" + k).value = v;
+  skipRandom = true; play();
+});
+// Si la persona edita un dato del pedido, se respetan sus valores en las siguientes corridas.
+$("#order").addEventListener("input", ev => { if (ev.target.id !== "f-vary" && $("#f-vary").checked) { $("#f-vary").checked = false; toast("Se usarán tus datos. Activa «Datos nuevos» para variar otra vez."); } });
+$("#prod-list").innerHTML = PRODUCTS.map(p => `<option value="${esc(p.name)}"></option>`).join("");
 
 /* ============================================================
    8. Arranque
    ============================================================ */
-buildGraph(); renderLegend(); renderPhases(null); renderDocs(); renderAgent(null); syncControls();
+buildGraph(); renderLegend(); renderPhases(null); renderDocs(); renderAgent(null); syncControls(); updateStats();
 resize(); requestAnimationFrame(frame);
 setTimeout(() => fitView(false), 2600);
 setTimeout(() => { if (!ctx) play(); }, 1600);
